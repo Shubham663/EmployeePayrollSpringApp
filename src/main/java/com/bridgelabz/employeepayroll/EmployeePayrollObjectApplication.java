@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class EmployeePayrollObjectApplication {
 
 	public static void main(String[] args) {
-		System.out.println("Inside MAin");
 		SpringApplication.run(EmployeePayrollObjectApplication.class, args);
 	}
 

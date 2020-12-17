@@ -1,11 +1,16 @@
 package com.bridgelabz.employeepayroll.model;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.Data;
+
+@Data
 @Entity
 @Table(name = "Employees")
 public class EmployeePayroll {
@@ -15,45 +20,7 @@ public class EmployeePayroll {
 	private Long id;
 	private String employeeName;
 	private Long salary;
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
-	/**
-	 * @return the employeeName
-	 */
-	public String getEmployeeName() {
-		return employeeName;
-	}
-	/**
-	 * @param employeeName the employeeName to set
-	 */
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
-	/**
-	 * @return the salary
-	 */
-	public Long getSalary() {
-		return salary;
-	}
-	/**
-	 * @param salary the salary to set
-	 */
-	public void setSalary(Long salary) {
-		this.salary = salary;
-	}
-	@Override
-	public String toString() {
-		return "EmployeePayroll [id=" + id + ", employeeName=" + employeeName + ", salary=" + salary + "]";
-	}
+	private String email;
+	private LocalDateTime localDateTime = LocalDateTime.now();
 	
 }
