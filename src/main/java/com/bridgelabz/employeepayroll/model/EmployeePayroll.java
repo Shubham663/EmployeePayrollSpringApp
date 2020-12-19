@@ -19,6 +19,9 @@ public class EmployeePayroll {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String employeeName;
+	private String gender;
+	private String profileImage;
+	private String[] departments;
 	private Long salary;
 	private String email;
 	private LocalDateTime localDateTime = LocalDateTime.now();

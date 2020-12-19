@@ -26,5 +26,13 @@ public class EmployeeDto {
 	 */
 	@NotNull
 	private String email;
-		
+	
+	@NotNull
+	private String gender;
+	
+	@NotNull
+	private String profileImage;
+	
+	@NotNull
+	private String[] departments;
 }

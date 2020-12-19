@@ -1,9 +1,10 @@
 package com.bridgelabz.employeepayroll.controller;
 
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -30,8 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/employee")
 @CrossOrigin
 @Slf4j
+
+@PropertySource("classpath:message.properties")
 public class EmployeeController {
 
+	
+	@Autowired
+	Environment environment;
 	
 	@Autowired
 	private IEmployeeService employeeService;
@@ -87,7 +93,7 @@ public class EmployeeController {
 	 * Deleting the employee using the email.
 	 */
 	@DeleteMapping
-	@Transactional
+//	@Transactional
 	public ResponseEntity<Response> delete(@Valid @RequestBody EmployeeDto employeeDto,@RequestHeader(value = "Authorisation")String token) {
 		Claims claims = tokenHelper.decodeJWT(token);
 		log.info(claims.get("token", String.class));
