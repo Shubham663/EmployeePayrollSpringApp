@@ -1,7 +1,10 @@
 package com.bridgelabz.employeepayroll.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.transaction.Transactional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,10 +48,10 @@ public class EmployeeService implements IEmployeeService{
 	 */
 	@Override
 	public Response addEmployee(EmployeeDto employeePayrollDto) {
-		empRepository.findByEmail(employeePayrollDto.getEmail()).ifPresent((emp) -> {throw new EmployeeException("The employee with this email already exists in the database");});
+		empRepository.findByEmail(employeePayrollDto.getEmail()).ifPresent((emp) -> {throw new EmployeeException(environment.getProperty("EMPLOYEE_ALREADY_PRESENT"));});
 		Stream.of(employeePayrollDto).map((emp) -> mapper.map(emp, EmployeePayroll.class)).forEach(emp -> empRepository.save(emp));
-		log.info("Employee " + employeePayrollDto + " added to repository");
-		Response response = new Response(200, "Employee Data added susscesfully",employeePayrollDto);
+		log.info(environment.getProperty("ADDITION_SUCCESSFULL"));
+		Response response = new Response(200, environment.getProperty("ADDITION_SUCCESSFULL"),employeePayrollDto);
 		return response;
 	}
 
@@ -56,12 +59,13 @@ public class EmployeeService implements IEmployeeService{
 	 *Deletes the employee with specified id
 	 */
 	@Override
+	@Transactional
 	public Response deleteByEmail(String email) {
 		Integer k = empRepository.deleteByEmail(email);
 		if(k.intValue() == 0)
-			throw new EmployeeException("Employee with specified email is not present and therefor cannot be deleted");
-		log.info("Employee deleted successfully");
-		return new Response(200,"Employee deleted successfully",null);
+			throw new EmployeeException(environment.getProperty("EMPLOYEE_FETCH_UNSUCCESSFULL"));
+		log.info(environment.getProperty("DELETION_SUCCESSFULL"));
+		return new Response(200,environment.getProperty("DELETION_SUCCESSFULL"),null);
 	}
 
 	/**
@@ -69,9 +73,9 @@ public class EmployeeService implements IEmployeeService{
 	 */
 	@Override
 	public Response getByEmail(String email) {
-		EmployeePayroll employeePayroll = empRepository.findByEmail(email).orElseThrow(() -> new EmployeeException("Employee Object having email " + email +"not found"));
-		log.info("Employee with email " + email + " fetched successfully");
-		return new Response(200, "Employee fetched successfully", mapper.map(employeePayroll,EmployeeDto.class));
+		EmployeePayroll employeePayroll = empRepository.findByEmail(email).orElseThrow(() -> new EmployeeException(environment.getProperty("EMPLOYEE_FETCH_UNSUCCESSFULL")));
+		log.info(environment.getProperty("SUCCESS"));
+		return new Response(200, environment.getProperty("SUCCESS"), mapper.map(employeePayroll,EmployeeDto.class));
 	}
 
 	/**
@@ -80,9 +84,9 @@ public class EmployeeService implements IEmployeeService{
 	@Override
 	public Response getList() {
 		List<EmployeePayroll> employeePayrolls = empRepository.getSorted()
-												.orElseThrow(() -> new EmployeeException("The list of emloyees was not fetched correctly"));
-		log.info("The list of employees fetched correctly");
-		return new Response(200, "List of Employees fetched successfully", employeePayrolls);
+												.orElseThrow(() -> new EmployeeException(environment.getProperty("LIST_LOAD_UNSUCCESSFULL")));
+		log.info(environment.getProperty("LIST_LOADED_SUCCESSFULLY"));
+		return new Response(200, environment.getProperty("LIST_LOADED_SUCCESSFULLY"), employeePayrolls);
 	}
 
 	/**
@@ -90,13 +94,13 @@ public class EmployeeService implements IEmployeeService{
 	 */
 	@Override
 	public Response updateByEmail(EmployeeDto employeeDto) {
-		EmployeePayroll employeePayroll = empRepository.findByEmail(employeeDto.getEmail()).orElseThrow(() -> new EmployeeException("The employee with the given Email does not exist and therefore cannot be updated"));
+		EmployeePayroll employeePayroll = empRepository.findByEmail(employeeDto.getEmail()).orElseThrow(() -> new EmployeeException(environment.getProperty("EMPLOYEE_FETCH_UNSUCCESSFULL")));
 		employeePayroll.setEmployeeName(employeeDto.getEmployeeName());
 		employeePayroll.setSalary(employeeDto.getSalary());
 		employeePayroll.setEmail(employeeDto.getEmail());
 		empRepository.save(employeePayroll);
-		log.info("The employee with email " + employeeDto.getEmail() + " updated successfully");
-		Response response = new Response(200, "Employee Data updated susscesfully",employeeDto);
+		log.info(environment.getProperty("UPDATE_SUCCESSFULL"));
+		Response response = new Response(200, environment.getProperty("UPDATE_SUCCESSFULL"),employeeDto);
 		return response;
 	}
 
@@ -106,37 +110,35 @@ public class EmployeeService implements IEmployeeService{
 	@Override
 	public Response getSalaryAboveAverage() {
 		EmployeePayroll[] employeesWithSalaryGreaterThanAverage = empRepository.getAboveAverage();
-		if(employeesWithSalaryGreaterThanAverage.length == 0)
-			return new Response(200, "No employees with such salaries present", employeesWithSalaryGreaterThanAverage);
-		log.info("The employees with salary above average fetched correctly");
-		return new Response(200,"The employees with salary above average fetched correctly",employeesWithSalaryGreaterThanAverage);
+		log.info(environment.getProperty("LIST_LOADED_SUCCESSFULLY"));
+		return new Response(200,environment.getProperty("LIST_LOADED_SUCCESSFULLY"),employeesWithSalaryGreaterThanAverage);
 		
 	}
 	
 	public Response check(CredentialsDto credentials) {
-		Credentials credentials2 = credentialsRepo.findByEmail(credentials.getEmail()).orElseThrow(() -> new CredentialsException("Invalid Credentials. Password or Username invalid"));
+		Credentials credentials2 = credentialsRepo.findByEmail(credentials.getEmail()).orElseThrow(() -> new CredentialsException(environment.getProperty("INVALID_CREDENTIALS")));
 		log.info(credentials.toString());
 		String token = tokenHelper.createJWT(credentials2.getId().toString(), environment.getProperty("token.issuer"), environment.getProperty("token.subject"), Long.parseLong(environment.getProperty("token.expirationTime"))); 
 		CredentialsDto dto = mapper.map(credentials2, CredentialsDto.class);
 		if(credentials.equals(dto))	
-			return new Response(200, "Successfully Logged in", token);
+			return new Response(200, environment.getProperty("LOGIN_SUCCESSFULL"), token);
 		else 
-			return new Response(400, "Invalid Credentials. Password or Username invalid", "Please provide valid credentials");
+			return new Response(400, environment.getProperty("INVALID_CREDENTIALS"),null);
 	}
 	
 	public Response addCredentials(CredentialsDto credentials) {
-		credentialsRepo.findByEmail(credentials.getEmail()).ifPresent((emp) -> {throw new CredentialsException("Invalid Credentials. Password or Username invalid");});
+		credentialsRepo.findByEmail(credentials.getEmail()).ifPresent((emp) -> {throw new CredentialsException(environment.getProperty("EMPLOYEE_ALREADY_PRESENT"));});
 		Credentials credentials3 = mapper.map(credentials, Credentials.class);
 		credentialsRepo.save(credentials3);
-		log.info("Successfully signed up");
-		return new Response(200, "The credentials were added successfully", credentials);
+		log.info(environment.getProperty("SIGNUP_SUCCESSFULL"));
+		return new Response(200, environment.getProperty("SIGNUP_SUCCESSFULL"), credentials);
 	}
 
 	@Override
 	public Response getEmployeeById(Long id) {
-		EmployeePayroll employeePayrolls = empRepository.findById(id).orElseThrow(() -> new EmployeeException("The list of emloyees was not fetched correctly"));
+		EmployeePayroll employeePayrolls = empRepository.findById(id).orElseThrow(() -> new EmployeeException(environment.getProperty("EMPLOYEE_FETCHed_UNSUCCESSFULL")));
 		EmployeeDto employeeDto = mapper.map(employeePayrolls, EmployeeDto.class);
-		log.info("The employee fetched correctly");
-		return new Response(200, "Employee fetched successfully", employeeDto);
+		log.info(environment.getProperty("SUCCESS"));
+		return new Response(200, environment.getProperty("SUCCESS"), employeeDto);
 		}
 }
